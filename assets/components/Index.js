@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Rating, Spinner } from 'flowbite-react';
 
+ 
+
 const Index = props => {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [generi,setGeneri] = useState([]);
+
+
 
   const fetchMovies = () => {
     setLoading(true);
@@ -16,14 +21,80 @@ const Index = props => {
       });
   }
 
+  const fetchMovies2 = () => {
+    setLoading(true);
+
+    return fetch('/api/movies_by_rating')
+      .then(response => response.json())
+      .then(data => {
+        setMovies(data.movies);
+        setLoading(false);
+      });
+  }
+
   useEffect(() => {
     fetchMovies();
+    GeneriFilm();
   }, []);
+
+  
+
+  const cambiaFiltro = (event) => {
+    if (event.target.value === "rating") {
+      fetchMovies2();
+      document.getElementById('order').value = event.target.value;
+    }
+  
+    if (event.target.value === "release_date") {
+      fetchMovies();
+      document.getElementById('order').value = event.target.value;
+    }
+  
+  };
+
+  const cambiaGenere = (event) =>{
+    setLoading(true);
+
+    return fetch('/api/movies_by_genre/'+event.target.value)
+      .then(response => response.json())
+      .then(data => {
+        setMovies(data.movies);
+        setLoading(false);
+      });
+  }
+
+
+  const GeneriFilm = props => {
+    setLoading(true);
+    return fetch('/api/genere_movies')
+      .then(response => response.json())
+      .then(data => {
+        setGeneri(data.generi);
+        setLoading(false);
+      });
+  }
+
 
   return (
     <Layout>
       <Heading />
-
+      <div>
+          <label>Ordina per:</label>
+          <select id="order" onChange={cambiaFiltro}>
+            <option value=""></option>
+            <option value="release_date" >Data di uscita</option>
+            <option value="rating" >Rating</option>
+          </select>
+        </div>
+      <div>
+        <label>Ordina per Genere</label>
+        <select onChange={cambiaGenere}>
+        <option></option>
+          {
+            generi.map((result)=>(<option value={result.id}>{result.value}</option>))
+          }
+        </select>
+      </div>
       <MovieList loading={loading}>
         {movies.map((item, key) => (
           <MovieItem key={key} {...item} />
@@ -31,6 +102,8 @@ const Index = props => {
       </MovieList>
     </Layout>
   );
+
+  
 };
 
 const Layout = props => {
